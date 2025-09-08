@@ -1,50 +1,31 @@
-"use client";
+import { cookieBasedClient } from '@/utils/amplifyServerUtils';
+import type { Schema } from '@/amplify/data/resource';
+import ConfigureAmplifyClientSide from '@/components/ConfigureAmplifyClientSide';
+import TodoForm from '@/components/TodoForm';
+import TodoList from '@/components/TodoList';
 
-import { useState, useEffect } from "react";
-import { generateClient } from "aws-amplify/data";
-import type { Schema } from "@/amplify/data/resource";
-import { Amplify } from "aws-amplify";
-import outputs from "@/amplify_outputs.json";
+export default async function App() {
+  // Server-side data fetching for initial render
+  const { data: todos, errors } = await cookieBasedClient.models.Todo.list();
 
-Amplify.configure(outputs);
-
-const client = generateClient<Schema>();
-
-export default function App() {
-  const [todos, setTodos] = useState<Array<Schema["Todo"]["type"]>>([]);
-
-  function listTodos() {
-    client.models.Todo.observeQuery().subscribe({
-      next: (data) => setTodos([...data.items]),
-    });
-  }
-
-  useEffect(() => {
-    listTodos();
-  }, []);
-
-  function createTodo() {
-    client.models.Todo.create({
-      content: window.prompt("Todo content"),
-    });
+  if (errors) {
+    console.error('Error fetching todos:', errors);
   }
 
   return (
-    <main>
-      <h1>My todos</h1>
-      <button onClick={createTodo}>+ new</button>
-      <ul>
-        {todos.map((todo) => (
-          <li key={todo.id}>{todo.content}</li>
-        ))}
-      </ul>
-      <div>
-        🥳 App successfully hosted. Try creating a new todo man dude.
-        <br />
-        <a href="https://docs.amplify.aws/nextjs/start/quickstart/nextjs-app-router-client-components/">
-          Review next steps of this tutorial.
-        </a>
-      </div>
-    </main>
+    <>
+      {/* Configure Amplify for client-side usage */}
+      <ConfigureAmplifyClientSide />
+      
+      <main className="container mx-auto p-4 max-w-2xl">
+        <h1 className="text-3xl font-bold mb-6">My Todos</h1>
+        
+        {/* Interactive form with client-side creation */}
+        <TodoForm />
+        
+        {/* Real-time todo list with client-side deletion */}
+        <TodoList initialTodos={todos || []} />
+      </main>
+    </>
   );
 }
