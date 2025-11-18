@@ -13,6 +13,12 @@ const schema = a.schema({
       priority: a.integer().required().default(0),
     })
     .authorization((allow) => [allow.owner()]),
+
+  chat: a.conversation({
+    aiModel: a.ai.model('Claude 3.5 Haiku'),
+    systemPrompt: 'You are a helpful assistant',
+  })
+    .authorization((allow) => allow.owner()),
 });
 
 export type Schema = ClientSchema<typeof schema>;

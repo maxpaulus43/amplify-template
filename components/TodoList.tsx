@@ -4,8 +4,11 @@ import { useState, useEffect } from 'react';
 import { generateClient } from 'aws-amplify/data';
 import type { Schema } from '@/amplify/data/resource';
 import { signInWithRedirect, signOut, getCurrentUser } from 'aws-amplify/auth';
+import { createAIHooks, AIConversation } from "@aws-amplify/ui-react-ai";
+
 
 const client = generateClient<Schema>();
+export const { useAIConversation, useAIGeneration } = createAIHooks(client);
 
 interface TodoListProps {
   initialTodos: Array<Schema["Todo"]["type"]>;
@@ -35,6 +38,14 @@ export default function TodoList({ initialTodos }: TodoListProps) {
 
     return () => subscription.unsubscribe();
   }, [isAuthenticated]);
+
+  const [
+    {
+      data: { messages },
+      isLoading: isLoadingChat,
+    },
+    handleSendMessage,
+  ] = useAIConversation('chat');
 
   const checkAuthStatus = async () => {
     try {
@@ -108,8 +119,14 @@ export default function TodoList({ initialTodos }: TodoListProps) {
         >
           Sign out
         </button>
+
+        <AIConversation
+          messages={messages}
+          isLoading={isLoadingChat}
+          handleSendMessage={handleSendMessage}
+        />
       </div>
-      
+
       <ul className="space-y-2">
         {todos.map((todo) => (
           <li key={todo.id} className="flex items-center justify-between p-2 border rounded">

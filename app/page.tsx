@@ -1,5 +1,5 @@
 import { runWithAmplifyServerContext } from '@/utils/amplifyServerUtils';
-import { getCurrentUser } from 'aws-amplify/auth/server';
+import { fetchUserAttributes, getCurrentUser } from 'aws-amplify/auth/server';
 import { cookieBasedClient } from '@/utils/amplifyServerUtils';
 import type { Schema } from '@/amplify/data/resource';
 import ConfigureAmplifyClientSide from '@/components/ConfigureAmplifyClientSide';
@@ -9,6 +9,7 @@ import TodoList from '@/components/TodoList';
 export default async function App() {
   let isAuthenticated = false;
   let todos: Schema["Todo"]["type"][] = [];
+  let email: string | undefined;
 
   try {
     // Check if user is authenticated
@@ -17,6 +18,8 @@ export default async function App() {
       operation: async (contextSpec) => {
         try {
           await getCurrentUser(contextSpec);
+          const userAttrs = await fetchUserAttributes(contextSpec);
+          email = userAttrs.email;
           isAuthenticated = true;
         } catch (error) {
           isAuthenticated = false;
@@ -48,6 +51,7 @@ export default async function App() {
 
         {isAuthenticated ? (
           <>
+            {email && <div>{email}</div>}
             {/* Interactive form with client-side creation */}
             <TodoForm />
 
